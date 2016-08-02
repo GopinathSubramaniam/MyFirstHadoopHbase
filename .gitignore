@@ -1,5 +1,7 @@
 /target/
 /.settings/
 /.git/
+/.idea
+*.iml
 .project
 .classpath
