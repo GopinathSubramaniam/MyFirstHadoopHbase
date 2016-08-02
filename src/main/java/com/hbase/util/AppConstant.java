@@ -31,7 +31,6 @@ public class AppConstant {
 	@Autowired
 	public AppConstant(@Value("${hbase.master}") String hbaseMaster, @Value("${hbase.zookeeper.property.clientPort}") String zookeeperClientPort,
 					   @Value("${hbase.zookeeper.quorum}") String zookeeperQuorum){ // Empty Constructor with Arguments
-		System.out.print("Constructor hbaseMaster = "+hbaseMaster);
 		this.hbaseMaster = hbaseMaster;
 		this.zookeeperClientPort = zookeeperClientPort;
 		this.zookeeperQuorum = zookeeperQuorum;
