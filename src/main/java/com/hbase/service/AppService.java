@@ -1,6 +1,7 @@
 package com.hbase.service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -16,6 +17,7 @@ import org.springframework.data.hadoop.hbase.RowMapper;
 import org.springframework.stereotype.Component;
 
 import com.hbase.model.User;
+import com.hbase.util.AppConstant;
 
 @Component	
 public class AppService {
@@ -25,33 +27,9 @@ public class AppService {
 	
 	
 	public void createTables(){
-		String tableName="User";
-		TableName tableNameVerified = TableName.valueOf(tableName);
-		HTableDescriptor table = new HTableDescriptor(tableNameVerified);
-		String name = "name";
-		String email = "email";
-		String mobile = "mobile";
-		
-		HColumnDescriptor nameColumnFamily = new HColumnDescriptor(name.getBytes());
-		HColumnDescriptor emailColumnFamily = new HColumnDescriptor(email.getBytes());
-		HColumnDescriptor mobileColumnFamily = new HColumnDescriptor(mobile.getBytes());
-		
-		table.addFamily(nameColumnFamily);
-		table.addFamily(emailColumnFamily);
-		table.addFamily(mobileColumnFamily);
-		
-		try {
-			System.out.println("hbase.master >>>>>>>>>>>>>>>> "+hbaseTemplate.getConfiguration().get("hbase.master"));
-			HBaseAdmin hBaseAdmin = new HBaseAdmin(hbaseTemplate.getConfiguration());
-			hBaseAdmin.createTable(table);
-			hBaseAdmin.close();
-			System.out.println("USER TABLE CREATED");
-		} catch (MasterNotRunningException e) {
-			e.printStackTrace();
-		} catch (ZooKeeperConnectionException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+		List<String> tables = new ArrayList<String>();
+		for (String name : tables) {
+			AppConstant.createUserTable(name);
 		}
 	}
 	
