@@ -15,6 +15,7 @@ public class AppController {
 	
 	@RequestMapping(value="/createTables")
 	public void createTables(){
+		System.out.println("AppController:createTables >>>>>>>>>>> ");
 		appService.createTables();
 	}
 	

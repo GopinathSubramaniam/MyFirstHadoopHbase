@@ -1,40 +1,56 @@
 package com.hbase.util;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @PropertySource("classpath:application.properties")
 public class AppConstant {
 
+	private static Logger logger = LoggerFactory.getLogger(AppConstant.class);
+
 	private static TableSchema schema = null;
 	private static Configuration config = null;
-	
+
+	private static String hbaseMaster = null;
+	private static String zookeeperClientPort = null;
+	private static String zookeeperQuorum = null;
+
 	@Autowired
-	private static Environment env;
-	
-	public static String createUserTable(String tableName){
+	public AppConstant(@Value("${hbase.master}") String hbaseMaster, @Value("${hbase.zookeeper.property.clientPort}") String zookeeperClientPort,
+					   @Value("${hbase.zookeeper.quorum}") String zookeeperQuorum){ // Empty Constructor with Arguments
+		System.out.print("Constructor hbaseMaster = "+hbaseMaster);
+		this.hbaseMaster = hbaseMaster;
+		this.zookeeperClientPort = zookeeperClientPort;
+		this.zookeeperQuorum = zookeeperQuorum;
+	}
+
+	public static String createHbaseTable(String tableName){
+		logger.info("CreateHBaseTable >>>>>>>>>> ");
 		boolean tableExists = isTableExists(tableName);
-		
-		List<String> columnNames = new ArrayList<String>();
+
+		List<String> columnNames = new ArrayList<String>();//user table columns
 		columnNames.add("name");
 		columnNames.add("email");
 		
 		if(!tableExists){
+			logger.info("Table "+tableName+ " is available >>>>>>>>>> ");
 			List<TableSchema> tableSchemas = createSchema(columnNames);
 			tableName = createTable("User", tableSchemas);
 		}else{
-			System.out.println("Table Already Exists");
+			logger.info("Table "+tableName+ " is already exists >>>>>>>>>> ");
 		}
 		return tableName;
 	}
@@ -69,13 +85,11 @@ public class AppConstant {
 	}
 	
 	public static Configuration getConfig(){
-		String hbaseMaster = env.getProperty("hbase.master");
-		String zookeeperClientPort = env.getProperty("hbase.zookeeper.property.clientPort");
-		String zookeeperQuorum = env.getProperty("hbase.zookeeper.quorum");
+		logger.info("HBase Master URL >>>>>>>>> "+hbaseMaster);
+
+		boolean isMasterExists = (config != null ? (config.get("hbase.master") == hbaseMaster) : false);
 		
-		boolean isMasterExists = (config.get("hbase.master") == hbaseMaster);
-		
-		if(config  == null && !isMasterExists){
+		if(!isMasterExists){
 			config = new Configuration();
 			config.set("hbase.master", hbaseMaster);
 			config.set("hbase.zookeeper.property.clientPort", zookeeperClientPort);
@@ -97,5 +111,5 @@ public class AppConstant {
 		}
 		return isTableExists;
 	}
-	
+
 }

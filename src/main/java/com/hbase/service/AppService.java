@@ -28,8 +28,9 @@ public class AppService {
 	
 	public void createTables(){
 		List<String> tables = new ArrayList<String>();
+		tables.add("User"); //Adding table names
 		for (String name : tables) {
-			AppConstant.createUserTable(name);
+			AppConstant.createHbaseTable(name);
 		}
 	}
 	
