@@ -22,18 +22,26 @@ public class AppConstant {
 	private static Logger logger = LoggerFactory.getLogger(AppConstant.class);
 
 	private static TableSchema schema = null;
-	private static Configuration config = null;
+	private static Configuration hbaseConfig = null;
+	private static Configuration hadoopConfig = null;
 
-	private static String hbaseMaster = null;
-	private static String zookeeperClientPort = null;
-	private static String zookeeperQuorum = null;
+	public static String HDFS_PATH = null;
+	public static String HBASE_MASTER = null;
+	public static String ZOOKEEPER_CLIENTPORT = null;
+	public static String ZOOKEEPER_QUORUM = null;
+	public static String HDFS_MEDIA_IMAGE_PATH = null;
+	public static String HDFS_MEDIA_VIDEO_PATH = null;
 
 	@Autowired
-	public AppConstant(@Value("${hbase.master}") String hbaseMaster, @Value("${hbase.zookeeper.property.clientPort}") String zookeeperClientPort,
-					   @Value("${hbase.zookeeper.quorum}") String zookeeperQuorum){ // Empty Constructor with Arguments
-		this.hbaseMaster = hbaseMaster;
-		this.zookeeperClientPort = zookeeperClientPort;
-		this.zookeeperQuorum = zookeeperQuorum;
+	public AppConstant(@Value("${hdfs.path}") String hdfsPath, @Value("${hbase.master}") String hbaseMaster, @Value("${hbase.zookeeper.property.clientPort}") String zookeeperClientPort,
+					   @Value("${hbase.zookeeper.quorum}") String zookeeperQuorum, @Value("${hdfs.media.image.path}") String hdfsMediaImagePath,
+					   @Value("${hdfs.media.video.path}") String hdfsMediaVideoPath){ // Empty Constructor with Arguments
+		this.HDFS_PATH = hdfsPath;
+		this.HBASE_MASTER = hbaseMaster;
+		this.ZOOKEEPER_CLIENTPORT = zookeeperClientPort;
+		this.ZOOKEEPER_QUORUM = zookeeperQuorum;
+		this.HDFS_MEDIA_IMAGE_PATH = hdfsMediaImagePath;
+		this.HDFS_MEDIA_VIDEO_PATH = hdfsMediaVideoPath;
 	}
 
 	public static String createHbaseTable(String tableName){
@@ -71,7 +79,7 @@ public class AppConstant {
 			HColumnDescriptor nameColumnFamily = new HColumnDescriptor(tableSchema.getColumnName());
 			table.addFamily(nameColumnFamily);
 		}
-		Configuration config = getConfig();
+		Configuration config = getHBaseConfig();
 		try {
 			
 			HBaseAdmin hBaseAdmin = new HBaseAdmin(config);
@@ -83,23 +91,35 @@ public class AppConstant {
 		return table.getNameAsString();
 	}
 	
-	public static Configuration getConfig(){
-		logger.info("HBase Master URL >>>>>>>>> "+hbaseMaster);
+	public static Configuration getHadoopConfig(){
+		logger.info("getHadoopConfig >>>>>>>>> ");
 
-		boolean isMasterExists = (config != null ? (config.get("hbase.master") == hbaseMaster) : false);
+		boolean isHadoopConfigExists = (hadoopConfig != null ? (hadoopConfig.get("fs.default.name") == HDFS_PATH) : false);
 		
-		if(!isMasterExists){
-			config = new Configuration();
-			config.set("hbase.master", hbaseMaster);
-			config.set("hbase.zookeeper.property.clientPort", zookeeperClientPort);
-			config.set("hbase.zookeeper.quorum", zookeeperQuorum);
+		if(!isHadoopConfigExists){
+			hadoopConfig = new Configuration();
+			hadoopConfig.set("fs.default.name", HDFS_PATH);
 		}
-		return config;
+		return hadoopConfig;
+	}
+
+	public static Configuration getHBaseConfig(){
+		logger.info("HBase Master URL >>>>>>>>> "+HBASE_MASTER);
+
+		boolean isMasterExists = (hbaseConfig != null ? (hbaseConfig.get("hbase.master") == HBASE_MASTER) : false);
+
+		if(!isMasterExists){
+			hbaseConfig = new Configuration();
+			hbaseConfig.set("hbase.master", HBASE_MASTER);
+			hbaseConfig.set("hbase.zookeeper.property.clientPort", ZOOKEEPER_CLIENTPORT);
+			hbaseConfig.set("hbase.zookeeper.quorum", ZOOKEEPER_QUORUM);
+		}
+		return hbaseConfig;
 	}
 	
 	public static boolean isTableExists(String tableName){
 		TableName tableNameVerified = TableName.valueOf(tableName);
-		Configuration config = getConfig();
+		Configuration config = getHBaseConfig();
 		HBaseAdmin hBaseAdmin;
 		boolean isTableExists = false;
 		try {
