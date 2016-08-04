@@ -8,8 +8,8 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -25,28 +25,14 @@ public class AppConstant {
 	private static Configuration hbaseConfig = null;
 	private static Configuration hadoopConfig = null;
 
-	public static String HDFS_PATH = null;
-	public static String HBASE_MASTER = null;
-	public static String ZOOKEEPER_CLIENTPORT = null;
-	public static String ZOOKEEPER_QUORUM = null;
-	public static String HDFS_MEDIA_IMAGE_PATH = null;
-	public static String HDFS_MEDIA_VIDEO_PATH = null;
-
 	@Autowired
-	public AppConstant(@Value("${hdfs.path}") String hdfsPath, @Value("${hbase.master}") String hbaseMaster, @Value("${hbase.zookeeper.property.clientPort}") String zookeeperClientPort,
-					   @Value("${hbase.zookeeper.quorum}") String zookeeperQuorum, @Value("${hdfs.media.image.path}") String hdfsMediaImagePath,
-					   @Value("${hdfs.media.video.path}") String hdfsMediaVideoPath){ // Empty Constructor with Arguments
-		this.HDFS_PATH = hdfsPath;
-		this.HBASE_MASTER = hbaseMaster;
-		this.ZOOKEEPER_CLIENTPORT = zookeeperClientPort;
-		this.ZOOKEEPER_QUORUM = zookeeperQuorum;
-		this.HDFS_MEDIA_IMAGE_PATH = hdfsMediaImagePath;
-		this.HDFS_MEDIA_VIDEO_PATH = hdfsMediaVideoPath;
-	}
+	private Environment env;
 
-	public static String createHbaseTable(String tableName){
+	private static AppConstant appConstant = new AppConstant();
+
+	public String createHbaseTable(String tableName){
 		logger.info("CreateHBaseTable >>>>>>>>>> ");
-		boolean tableExists = isTableExists(tableName);
+		boolean tableExists = appConstant.isTableExists(tableName);
 
 		List<String> columnNames = new ArrayList<String>();//user table columns
 		columnNames.add("name");
@@ -54,15 +40,15 @@ public class AppConstant {
 		
 		if(!tableExists){
 			logger.info("Table "+tableName+ " is available >>>>>>>>>> ");
-			List<TableSchema> tableSchemas = createSchema(columnNames);
-			tableName = createTable("User", tableSchemas);
+			List<TableSchema> tableSchemas = appConstant.createSchema(columnNames);
+			tableName = appConstant.createTable("User", tableSchemas);
 		}else{
 			logger.info("Table "+tableName+ " is already exists >>>>>>>>>> ");
 		}
 		return tableName;
 	}
 	
-	public static List<TableSchema> createSchema(List<String> columnNames){
+	public List<TableSchema> createSchema(List<String> columnNames){
 		List<TableSchema> tableSchemas = new ArrayList<TableSchema>();
 		for (String column : columnNames) {
 			schema = new TableSchema();
@@ -72,7 +58,7 @@ public class AppConstant {
 		return tableSchemas;
 	}
 	
-	public static String createTable(String tableName, List<TableSchema> tableSchemas){
+	public String createTable(String tableName, List<TableSchema> tableSchemas){
 		TableName tableNameVerified = TableName.valueOf(tableName);
 		HTableDescriptor table = new HTableDescriptor(tableNameVerified);
 		for (TableSchema tableSchema : tableSchemas) {
@@ -91,33 +77,41 @@ public class AppConstant {
 		return table.getNameAsString();
 	}
 	
-	public static Configuration getHadoopConfig(){
-		logger.info("getHadoopConfig >>>>>>>>> ");
+	public Configuration getHadoopConfig(){
+		String hdfsPath = env.getProperty("hdfs.path");
+		String hadoopHomeDir = env.getProperty("hadoop.home.dir");
 
-		boolean isHadoopConfigExists = (hadoopConfig != null ? (hadoopConfig.get("fs.default.name") == HDFS_PATH) : false);
+		logger.info("Hadoop Configuration Called. HDFS_PATH ::: "+hdfsPath);
+
+		boolean isHadoopConfigExists = (hadoopConfig != null ? (hadoopConfig.get("fs.default.name") == hdfsPath) : false);
 		
 		if(!isHadoopConfigExists){
 			hadoopConfig = new Configuration();
-			hadoopConfig.set("fs.default.name", HDFS_PATH);
+			logger.info("Hadoop Configuration Called. HDFS_PATH ::: "+hdfsPath);
+			hadoopConfig.set("fs.default.name", hdfsPath);
+			//hadoopConfig.set("hadoop.home.dir", hadoopHomeDir);
 		}
 		return hadoopConfig;
 	}
 
-	public static Configuration getHBaseConfig(){
-		logger.info("HBase Master URL >>>>>>>>> "+HBASE_MASTER);
+	public Configuration getHBaseConfig(){
+		String hbaseMaster = env.getProperty("hdfs.path");
+		String zookeeperClientPort = env.getProperty("hbase.zookeeper.property.clientPort");
+		String zookeeperQuorum = env.getProperty("hbase.zookeeper.quorum");
 
-		boolean isMasterExists = (hbaseConfig != null ? (hbaseConfig.get("hbase.master") == HBASE_MASTER) : false);
+		logger.info("HBase Master URL >>>>>>>>> "+hbaseMaster);
+		boolean isMasterExists = (hbaseConfig != null ? (hbaseConfig.get("hbase.master") == hbaseMaster) : false);
 
 		if(!isMasterExists){
 			hbaseConfig = new Configuration();
-			hbaseConfig.set("hbase.master", HBASE_MASTER);
-			hbaseConfig.set("hbase.zookeeper.property.clientPort", ZOOKEEPER_CLIENTPORT);
-			hbaseConfig.set("hbase.zookeeper.quorum", ZOOKEEPER_QUORUM);
+			hbaseConfig.set("hbase.master", hbaseMaster);
+			hbaseConfig.set("hbase.zookeeper.property.clientPort", zookeeperClientPort);
+			hbaseConfig.set("hbase.zookeeper.quorum", zookeeperQuorum);
 		}
 		return hbaseConfig;
 	}
 	
-	public static boolean isTableExists(String tableName){
+	public boolean isTableExists(String tableName){
 		TableName tableNameVerified = TableName.valueOf(tableName);
 		Configuration config = getHBaseConfig();
 		HBaseAdmin hBaseAdmin;

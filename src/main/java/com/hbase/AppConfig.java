@@ -1,12 +1,6 @@
 package com.hbase;
 
-import org.springframework.boot.context.embedded.MultipartConfigFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.multipart.MultipartResolver;
-import org.springframework.web.multipart.commons.CommonsMultipartResolver;
-
-import javax.servlet.MultipartConfigElement;
 
 /**
  * Created by Gopi on 03-08-2016.
@@ -27,5 +21,6 @@ public class AppConfig {
         CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
         return multipartResolver;
     }*/
+
 
 }

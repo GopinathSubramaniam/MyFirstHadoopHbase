@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/app")
-public class AppController {
+public class AppAdapter {
 	
 	@Autowired
 	private AppService appService;
@@ -34,10 +34,8 @@ public class AppController {
 
 		JSONObject userObj = new JSONObject(data);
 
-		/*JsonObject user = new JsonObject();
-		user.getAsJsonObject(data);
-		*/System.out.println(">>>>>>>>>> uploadImage >>>>>>>>>> User = " + userObj);
-		//if(file != null && file.getFile() != null) appService.uploadMedia(file.getFile());
+		System.out.println(">>>>>>>>>> uploadImage >>>>>>>>>> User = " + userObj);
+		if(file != null) appService.uploadMedia(file);
 		return true;
 	}
 	

@@ -2,19 +2,21 @@ package com.hbase.service;
 
 import com.hbase.model.User;
 import com.hbase.util.AppConstant;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.client.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.data.hadoop.hbase.HbaseTemplate;
 import org.springframework.data.hadoop.hbase.RowMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
+import java.io.BufferedInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,14 +28,17 @@ public class AppService {
 	@Autowired
 	private HbaseTemplate hbaseTemplate;
 
-	@Value("${hdfs.path}")
-	private String hdfsPath;
-	
+	@Autowired
+	private AppConstant appConstant;
+
+	@Autowired
+	private Environment env;
+
 	public void createTables(){
 		List<String> tables = new ArrayList<String>();
 		tables.add("User"); //Adding table names
 		for (String name : tables) {
-			AppConstant.createHbaseTable(name);
+			appConstant.createHbaseTable(name);
 		}
 	}
 	
@@ -57,23 +62,35 @@ public class AppService {
 		logger.info("Upload Media >>>>>>>>>> ");
 		String fileName = file.getOriginalFilename();
 		try {
-			FileSystem hdfs = FileSystem.get(AppConstant.getHadoopConfig());
-			Path path = new Path(AppConstant.HDFS_MEDIA_IMAGE_PATH);
-			Path imagePath = new Path(AppConstant.HDFS_MEDIA_IMAGE_PATH+fileName);
+			String hdfsMediaImagePath = env.getProperty("hdfs.media.image.path");
+			String hdfsMediaVideoPath = env.getProperty("hdfs.media.video.path");
+
+			FileSystem hdfs = FileSystem.get(appConstant.getHadoopConfig());
+			Path path = new Path(hdfsMediaImagePath);
+			Path imagePath = new Path(hdfsMediaImagePath+fileName);
 
 			if(hdfs.exists(path)){
 				logger.info("Directory Already Exists");
+				//hdfs.delete(path, true);
+				//logger.info("Directory Deleted Successfully");
 			}else{
 				hdfs.mkdirs(path);// Create directory file in HDFS if not exists
 				logger.info("Directory created successfully");
 			}
 
-			if(hdfs.exists(imagePath)){
-				logger.info("File Already Exists");
-			}else{
-				hdfs.createNewFile(imagePath);	// Upload file in HDFS if not exists
-				logger.info("File Uploaded Successfully");
+			FSDataOutputStream out = hdfs.create(imagePath);
+			InputStream in = new BufferedInputStream(file.getInputStream());
+			byte[] b = new byte[1024];
+			int numBytes = 0;
+			while ((numBytes = in.read(b)) > 0) {
+				out.write(b, 0, numBytes);
 			}
+			in.close();
+			out.close();
+			hdfs.close();
+			System.out.println(">>>>>>>>>> Media Uploaded Successfully >>>>>>>>>>");
+
+
 
 		}catch(Exception e){
 			e.printStackTrace();
