@@ -2,27 +2,29 @@ package com.hbase.service;
 
 import com.hbase.model.Status;
 import com.hbase.util.AppConstant;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Created by Gopi on 04-08-2016.
  */
 
 @Component
-public class FileUploadService {
+public class MediaService {
 
-    private Logger logger = LoggerFactory.getLogger(FileUploadService.class);
+    private Logger logger = LoggerFactory.getLogger(MediaService.class);
 
     @Autowired
     private AppConstant appConstant;
@@ -34,6 +36,38 @@ public class FileUploadService {
         logger.info("Upload Media Called");
         Status status = uploadMediaInHDFS(file, path);
         return status;
+    }
+
+    public  void getMedia(HttpServletResponse res, String fileName, String path){
+        FileSystem hdfs = null;
+        FSDataInputStream fsDataInputStream = null;
+        OutputStream os = null;
+        try {
+            hdfs = FileSystem.get(appConstant.getHadoopConfig());
+            Path fileUrl = new Path(path+fileName);
+            fsDataInputStream = hdfs.open(fileUrl);
+
+            res.setContentType("application/octet-stream");
+            res.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+
+            os = res.getOutputStream();
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = fsDataInputStream.read(buffer)) != -1) {
+                os.write(buffer, 0, len);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }finally{
+            try {
+                os.flush();
+                os.close();
+                fsDataInputStream.close();
+
+            }catch (Exception fe){
+                fe.printStackTrace();
+            }
+        }
     }
 
     private Status uploadMediaInHDFS(MultipartFile file, String path){

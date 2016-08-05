@@ -11,7 +11,7 @@ function upload(ev){
     formData.append('file', file);
     formData.append("user", JSON.stringify({name: 'Gopi', email:'asdf@asdf', mobile: 'asdsad0', password: 'asdf'}));
     $.ajax({
-        url:'/upload/image',
+        url:'/file/uploadImage',
         type: 'POST',
         data: formData,
         enctype: 'multipart/form-data;boundary=gc0p4Jq0M2Yt08jU534c0p',

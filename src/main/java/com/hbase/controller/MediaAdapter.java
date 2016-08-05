@@ -1,7 +1,7 @@
 package com.hbase.controller;
 
 import com.hbase.model.Status;
-import com.hbase.service.FileUploadService;
+import com.hbase.service.MediaService;
 import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -11,22 +11,25 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * Created by Gopi on 04-08-2016.
  */
 
 @RestController
-@RequestMapping("/upload")
-public class FileUploadAdapter {
+@RequestMapping("/file")
+public class MediaAdapter {
 
 
     @Autowired
-    private FileUploadService uploadService;
+    private MediaService uploadService;
 
     @Autowired
     private Environment env;
 
-    @RequestMapping(value="/image", method= RequestMethod.POST)
+    @RequestMapping(value="/uploadImage", method= RequestMethod.POST)
     public Status uploadImage(@RequestParam("file") MultipartFile file, @RequestParam("user") String data)  throws Exception{
         JSONObject userObj = new JSONObject(data);
 
@@ -40,6 +43,12 @@ public class FileUploadAdapter {
             status.setStatusMsg("Both FILE & PATH must contain some value");
         }
         return status;
+    }
+
+    @RequestMapping(value="/getImage", method= RequestMethod.GET)
+    public  void getImage(HttpServletRequest req, HttpServletResponse res, @RequestParam("imageName") String imageName){
+        String path = env.getProperty("hdfs.media.image.path");
+        uploadService.getMedia(res, imageName, path);
     }
 
 }

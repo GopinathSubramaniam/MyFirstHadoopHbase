@@ -1,12 +1,25 @@
 package com.hbase;
 
-import org.springframework.context.annotation.Configuration;
-
 /**
  * Created by Gopi on 03-08-2016.
  */
-@Configuration
 public class AppConfig {
+
+
+    /*@Bean
+    public ByteArrayHttpMessageConverter byteArrayHttpMessageConverter() {
+        ByteArrayHttpMessageConverter arrayHttpMessageConverter = new ByteArrayHttpMessageConverter();
+        arrayHttpMessageConverter.setSupportedMediaTypes(getSupportedMediaTypes());
+        return arrayHttpMessageConverter;
+    }
+
+    private List<MediaType> getSupportedMediaTypes() {
+        List<MediaType> list = new ArrayList<>();
+        list.add(MediaType.IMAGE_JPEG);
+        list.add(MediaType.IMAGE_PNG);
+        list.add(MediaType.APPLICATION_OCTET_STREAM);
+        return list;
+    }*/
 
    /* @Bean
     public MultipartConfigElement multipartConfigElement() {
